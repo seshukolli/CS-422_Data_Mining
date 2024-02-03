@@ -1,0 +1,40 @@
+---
+title: "CS 422 HW3"
+author: "Sesha Shai Datta Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+<!-- More information in R Markdown can be found at:
+1. https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html  This is 
+   the place to start since it is a short tutorial.
+2. https://rmarkdown.rstudio.com/index.html This contains a longer 
+   tutorial.  Take a look at the cheatsheet in 
+   https://rmarkdown.rstudio.com/lesson-15.html, it is a concise 
+   reference of R Markdown on two pages.
+<-->
+
+
+### Problem 1.1
+```{r}
+#install.packages("rpart")
+#install.packages("rpart.plot")
+```
+### Load Library
+```{r}
+library(rpart)
+library(rpart.plot)
+```
+
+```{r}
+library(rpart)
+library(rpart.plot)
+data("iris")
+fit <- rpart(Species~., data = iris,parms = list(split="information"), method = 'class')
+rpart.plot(fit, extra=104, fallen.leaves=TRUE, type=4, main="Iris Dataset Decision Tree")
+summary(fit)
+```

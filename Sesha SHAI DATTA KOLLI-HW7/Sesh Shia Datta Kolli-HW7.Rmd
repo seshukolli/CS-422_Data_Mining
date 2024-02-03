@@ -1,0 +1,208 @@
+---
+title: "CS 422 HW7"
+author: "Sesha Shai Datta Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+```{r}  
+library(keras)
+library(dplyr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+
+rm(list=ls())
+options(digits=3)
+# Set working directory as needed
+setwd("D:/Masters/DM/HW7/")
+
+df <- read.csv(file="wifi_localization.csv")
+
+# Seed the PRNG
+set.seed(1122)
+df <- df[sample(nrow(df)), ] # Shuffle, as all of the data in the .csv file
+                             # is ordered by label!  
+```
+### Part 2-2.1-a
+```{r}
+library(rpart)
+options(digits=3)
+spt = sort(sample(nrow(df), nrow(df)*.8))
+train<-df[spt,]
+test<-df[-spt,]
+
+m <- rpart(room~., data = train,parms = list(split="information"), method = 'class')
+summary(m)
+ypred<-rpart.predict(m,newdata=test,type="class")
+rpart.plot(m, extra=104, fallen.leaves=TRUE, type=4, main=" Decision Tree")
+
+
+cmatrix<-confusionMatrix(data=ypred,reference = as.factor(test[,length(test)]))
+cmatrix_c<-cmatrix
+cat('Overall accuarcy: ',cmatrix$overall[1],'\nSensitivity Class 1:',cmatrix$byClass[1], '\t\tClass 2:',cmatrix$byClass[2] ,'\n\t    Class 3:',cmatrix$byClass[3] ,'\tClass 4:',cmatrix$byClass[4],'\nSpecificity Class 1:',cmatrix$byClass[5], '\tClass 2:',cmatrix$byClass[6] ,'\n\t    Class 3:',cmatrix$byClass[7] ,'\tClass 4:',cmatrix$byClass[8],'\nPPV \t    Class 1:',cmatrix$byClass[9], '\tClass 2:',cmatrix$byClass[10] ,'\n\t    Class 3:',cmatrix$byClass[11] ,'\tClass 4:',cmatrix$byClass[12],'\nBal. Acc.   Class 1:',cmatrix$byClass[29], '\tClass 2:',cmatrix$byClass[30] ,'\n\t    Class 3:',cmatrix$byClass[31] ,'\tClass 4:',cmatrix$byClass[32])
+
+```
+### part 2-2.1-b
+
+
+```{r}
+df$label<-rep(0,nrow(df))
+df$label[df$room == 2]<- 1
+df$label[df$room == 3]<- 2
+df$label[df$room == 4]<- 3
+df$room <- NULL
+#model<- NULL
+options(digits=3)
+set.seed(1122)
+indx<- sample(1:nrow(df),0.20*nrow(df))
+test.df<- df[indx, ]
+train.df<-df[-indx, ]
+
+X_train <- select(train.df, -c(label))
+y_train <- train.df$label
+y_train.ohe <- to_categorical(y_train)
+
+
+X_test <- select(test.df, -c(label))
+y_test <- test.df$label
+y_test.ohe <- to_categorical(test.df$label)
+
+model <- keras_model_sequential() %>%
+  layer_dense(units = 1, activation="relu", input_shape=c(7)) %>%
+  layer_dense(units = 4, activation="softmax")
+
+#model # Print the summary of the model.
+
+model %>% 
+  compile(loss = "categorical_crossentropy", 
+          optimizer="adam", 
+          metrics=c("accuracy"))
+
+model %>% fit(
+  data.matrix(X_train), 
+  y_train.ohe,
+  epochs=100,
+  batch_size=32,
+  validation_split=0.20
+)
+model_out<- model %>% evaluate(as.matrix(X_test), y_test.ohe)
+pred<- predict(model, as.matrix(X_test))
+#pred
+predc<- apply(pred, 1,function(x) which.max(x)-1)
+#predc
+cm<-confusionMatrix(as.factor(predc),as.factor(y_test))
+cm
+
+```
+### part 2-2.1-b-i
+```{r}
+
+#model_out
+cat('For one neuron in hidden layer, loss:', model_out[1],',Accuracy:',model_out[2])
+```
+### part 2-2.1-b-ii
+The accuracy is 0.2025 it is low,by seeing the plot there is no such drastic change in the accuracy value(graph), there is only little change from the first epoch to the last. This is because there is only one neuron in the hidden layer, so that it is not giving good accuracy.
+### part 2-2.1-b-iii
+```{r}
+pred
+predc
+cat('All are predicted as 3rd room, because of having the one neuron the model is not so efficient and also having low accuracy')
+```
+### part 2-2.1-b-iii
+```{r}
+predc
+```
+The bias is very low. The model's bias is very low since it is underfitting, which means it has never trained the pattern of data to map the given inputs to the intended output class.
+### part 2-2.1-b-iv
+No there will be no change in the model, if we train it with 200 epochs also. Because we are still using the single neuron in the hidden layer, there will not be much improvement in the model and this model is under fitting.
+### part 2-2.1-c
+```{r}
+model1<- NULL
+model1<- keras_model_sequential() %>%
+  layer_dense(units = 12, activation="relu", input_shape=c(7)) %>%
+  layer_dense(units = 4, activation="softmax")
+model1
+model1 %>% 
+  compile(loss = "categorical_crossentropy", 
+          optimizer="adam", 
+          metrics=c("accuracy"))
+
+model1 %>% fit(
+  data.matrix(X_train), 
+  y_train.ohe,
+  epochs=100,
+  batch_size=32,
+  validation_split=0.20
+)
+model1_out<- model1 %>% evaluate(as.matrix(X_test), y_test.ohe)
+#model1_out
+pred1<- predict(model1, as.matrix(X_test))
+
+predc1<- apply(pred1, 1,function(x) which.max(x)-1)
+predc1
+cmatrix1<-confusionMatrix(data=as.factor(predc1),reference=as.factor(y_test))
+cmatrix1
+```
+### part 2-2.1-c-i
+```{r}
+cat('Best model has 12 neurons in the hidden layer.\nIn this model, loss:', model1_out[1], 'Accuracy: ',model1_out[2])
+
+```
+### part 2-2.1-c-ii
+```{r}
+cat('The model has a low bias because the accuracy on the test set is 95%, indicating that there is only a small percentage of mistake, and we can see in the above printed confusion matrix that just 9 cases out of 400 observations in the test set had incorrect predictions')
+```
+### part 2-2.1-c-iii
+```{r}
+cat('To reduce over fitting, we can end training at about the 47th epoch based on the plots of accuracy and validation. Because from epochs approaching the 47th epoch validation accuracy start improving significantly thus we can end here or else it might overfit')
+```
+### part 2-2.1-d
+```{r}
+
+options(digits = 3)
+cat('Overall accuarcy: ',cmatrix1$overall[1],'\nSensitivity Class 1:',cmatrix1$byClass[1], '\tClass 2:',cmatrix1$byClass[2] ,'\n\t    Class 3:',cmatrix1$byClass[3] ,'\tClass 4:',cmatrix1$byClass[4],'\nSpecificity Class 1:',cmatrix1$byClass[5], '\t        Class 2:',cmatrix1$byClass[6] ,'\n\t    Class 3:',cmatrix1$byClass[7] ,'\tClass 4:',cmatrix1$byClass[8],'\nPPV \t    Class 1:',cmatrix1$byClass[9], '\tClass 2:',cmatrix1$byClass[10] ,'\n\t    Class 3:',cmatrix1$byClass[11] ,'\tClass 4:',cmatrix1$byClass[12],'\nBal. Acc.   Class 1:',cmatrix1$byClass[29], '\tClass 2:',cmatrix1$byClass[30] ,'\n\t    Class 3:',cmatrix1$byClass[31] ,'\tClass 4:',cmatrix1$byClass[32])
+```
+### part 2-2.1-d-i
+```{r}
+options(digits=3)
+bal_a1<-(cmatrix_c$byClass[1,11]+cmatrix_c$byClass[2,11]+cmatrix_c$byClass[3,11]+cmatrix_c$byClass[4,11])/4
+bal_a2<-(cmatrix1$byClass[1,11]+cmatrix1$byClass[2,11]+cmatrix1$byClass[3,11]+cmatrix1$byClass[4,11])/4
+
+cat("Average Balanced accuracy of Decision Tree Model is:",bal_a1,"\n")
+cat("Average Balanced accuracy of Best Neural Network Model is:",bal_a2,"\n")
+cat("Average Balanced accuracy of Best Neural Network Model > Average Balanced accuracy of Decision Tree Model")
+
+
+s_a1<-(cmatrix_c$byClass[1,1]+cmatrix_c$byClass[2,1]+cmatrix_c$byClass[3,1]+cmatrix_c$byClass[4,1])/4
+s_a2<-(cmatrix1$byClass[1,1]+cmatrix1$byClass[2,1]+cmatrix1$byClass[3,1]+cmatrix1$byClass[4,1])/4
+
+cat("\n\nAverage Sesitivity of Decision Tree Model is:",s_a1,"\n")
+cat("Average Sesitivity of Best Neural Network Model is:",s_a2,"\n")
+cat("Average Sesitivity of Best Neural Network Model > Average Sensitivity of Decision Tree Model")
+
+spa1<-(cmatrix_c$byClass[1,2]+cmatrix_c$byClass[2,2]+cmatrix_c$byClass[3,2]+cmatrix_c$byClass[4,2])/4
+spa2<-(cmatrix1$byClass[1,2]+cmatrix1$byClass[2,2]+cmatrix1$byClass[3,2]+cmatrix1$byClass[4,2])/4
+
+cat("\n\nAverage Specificity of Decision Tree Model is:",spa1,"\n")
+cat("Average Specificity of Best Neural Network Model is:",spa2,"\n")
+cat("Average Specificity of Best Neural Network Model > Average Specifivity of Decision Tree Model")
+
+
+posva1<-(cmatrix_c$byClass[1,2]+cmatrix_c$byClass[2,2]+cmatrix_c$byClass[3,2]+cmatrix_c$byClass[4,2])/4
+posva2<-(cmatrix1$byClass[1,3]+cmatrix1$byClass[2,3]+cmatrix1$byClass[3,3]+cmatrix1$byClass[4,3])/4
+
+cat("\n\nAverage PPV of Decision Tree Model is:",posva1,"\n")
+cat("Average PPV of Best Neural Network Model is:",posva2,"\n")
+cat("Average PPV of Decision Tree Model > Average PPV of Best Neural Network Model")
+
+```
+
+### part 2-2.1-d-ii
+```{r}
+cat("\n Because the metrics of decision trees and neural networks are identical, with the exception of choice trees slightly higher sensitivity and PPV. In this circumstance, I will deploy decision tree in production because both models are the same and decision tree has superior interpretability than neural network.")
+```

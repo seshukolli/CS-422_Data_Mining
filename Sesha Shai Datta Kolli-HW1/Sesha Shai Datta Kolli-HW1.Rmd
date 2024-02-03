@@ -1,0 +1,100 @@
+---
+title: "CS 422 HW1"
+author: "Sesha Shai Datta-Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+<!-- More information in R Markdown can be found at:
+1. https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html  This is 
+   the place to start since it is a short tutorial.
+2. https://rmarkdown.rstudio.com/index.html This contains a longer 
+   tutorial.  Take a look at the cheatsheet in 
+   https://rmarkdown.rstudio.com/lesson-15.html, it is a concise 
+   reference of R Markdown on two pages.
+<-->
+
+
+
+### Library
+```{r}
+library(psych)
+library(dplyr)
+```
+### 2.1-i
+```{r}
+setwd("D:/Masters/DM/HW1")
+data <- read.csv(file="us-covid.csv",skip=7)
+data.frame(data)
+```
+### 2.1-ii
+#### Removing the vector(confirmed_deaths) from data frame "data"
+```{r}
+data=data[! names(data) %in% c('confirmed_deaths')]
+data
+names(data)
+```
+###  2.1-iii-a
+#### printing top 6 entries in desc order   
+```{r}
+arrange(data,desc(total_cases)) %>% head(6) 
+```
+###  2.1-iii-b
+#### printing bottom 6 entries
+```{r}
+arrange(data,desc(total_cases))%>% tail(6) 
+```
+
+### 2.1-iv
+```{r}
+data
+data1=subset(data, select= -c(state,level))
+data1
+```
+#### This is the data which is left after removing the state and the level.
+```{r}
+pairs.panels(data1,
+       smooth = TRUE,   ###TRUE draws loess smooths
+       scale = FALSE,   ###TRUE scales the correlation font by the size of the absolute correlation.
+       density=TRUE,    ###TRUE shows the density plots as well as histograms
+       ellipses=TRUE,   ### shows the correlation of the ellipse
+     digits = 4,        ###the number of digits to show
+     method="pearson",  ###method parameter for the correlation ("pearson","spearman","kendall")
+     pch = 20,          ###The plot character (defaults to 20 which is a '.').
+     cor=TRUE,          ###If plotting regressions, should correlations be reported?
+     jiggle=FALSE,      ###Should the points be jittered before plotting
+     factor=2,          ###factor for jittering (1-5)
+     hist.col="cyan",   ###What color should the histogram on the diagonal be?
+     show.points=TRUE,  ###If FALSE, do not show the data points, just the data ellipses and smoothed functions
+     smoother=FALSE,    ###If TRUE, then smooth.scatter the data points -- slow but pretty with lots of subjects
+    
+      )
+```
+### 2.1-iv-a
+#### We cannot plot the data in that format, it should be in the numarical form.So,it shows the warning if we doesnt remove those both columns,then its difficult to plot.But those are the columns are unique, which are independent columns.  
+
+### 2.1-iv-b
+#### The highest correlation found is 0.97, it is between the "total_cases" and the "total_deaths".That means, the maximum people are died who are reported as covid.Here there is hight relationship between those both..
+
+### 2.1-iv-c
+#### The lowest correlation found is 0.0029, it is between the "cases_last_7_days" and "cases_ratio_per_100k".Here, this means the people who were reported as having covid in past 7 days are very less compared to the ratio of 100k.
+
+### 2.1-V-a
+```{r}
+plot(data$confirmed+data$probable,data$total_deaths,xlab="Confirmed and Probable cases",ylab="Total_Deaths")
+```
+### 2.1-v-b
+
+#### The anomaly is the data which doesnt comes under the normal pattern. these kind of anomaly data also known as outliers in some cases, the data shown in the above graph shows some anomalies, which are located far from the normal data and looks unusual.The main focus of anomaly detection is to discover these kind of anomaly data, to know either they are actual data or not.When we calculate the Threshold value of the data,then we will calculate the distance of each data, now if we found a data which is grater than the threshold then it is an outlier or anomaly.
+
+### 2.1-v-c
+```{r}
+anomaly_data<-filter(data, total_cases >0 & ((data1$confirmed)+(data1$probable)==0))
+anomaly_data<-subset(anomaly_data,select = c(state, total_deaths, confirmed,probable,total_cases))
+anomaly_data
+```

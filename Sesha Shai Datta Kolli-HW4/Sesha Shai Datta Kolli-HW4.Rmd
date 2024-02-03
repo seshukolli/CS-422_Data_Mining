@@ -1,0 +1,191 @@
+---
+title: "CS 422 HW4"
+author: "Sesha Shai Datta Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+<!-- More information in R Markdown can be found at:
+1. https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html  This is 
+   the place to start since it is a short tutorial.
+2. https://rmarkdown.rstudio.com/index.html This contains a longer 
+   tutorial.  Take a look at the cheatsheet in 
+   https://rmarkdown.rstudio.com/lesson-15.html, it is a concise 
+   reference of R Markdown on two pages.
+<-->
+
+```{r}
+library ('plyr')
+library('dplyr')
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(pROC)
+library(ROCR)
+options(digits = 3)
+set.seed(1122)
+setwd("D:/Masters/DM/HW4")
+train <- read.csv(file="adult-train.csv")
+test <- read.csv(file="adult-test.csv")
+data.frame(train)
+```
+### Part 2.1-A
+```{r}
+rdata<-function(data){
+  cn=ldply(data, function(c) sum(c =="?"))
+  cn=cn$.id[cn$V1>0]
+  indices<-list()
+  for(c in cn){
+    cat('Total no of "?" in',c,': ',sum(data[c]=='?'),'\n')
+    indices <- c(indices, which(data[c]=='?'))
+  }
+  indices<-unique(indices)
+  data<-data %>% slice(-c(unlist(indices)))
+  cat('No of rows after cleaning',nrow(data),'\n\n')
+  return(data)
+}
+
+train<-rdata(train)
+test<-rdata(test)
+```
+### Part 2.1-B
+```{r}
+set.seed(1122)
+```
+### Part 2.1-B-i
+```{r}
+model<-rpart(income ~ ., data = train)
+print(model$variable.importance[1:3])
+rpart.plot(model,type = 1,extra=104)
+```
+### Part 2.1-B-ii
+#### The first split is done on the 'relationship' predictor and it is the root node of the decision tree. The '<=50k' is the predicted class of the root node. The distribution of observation of the root node for class '<=50k' is 75% and for the '>50k' is 25%.
+
+### Part 2.1-C
+``` {r}
+ypred<- predict(model,newdata=test,type='class')
+confusion_matrix <- confusionMatrix(ypred, as.factor(test$income))
+confusion_matrix
+
+```
+### Part 2.1-C-i
+#### Balanced accuracy
+```{r}
+balanced_accuracy<- (confusion_matrix$byClass['Sensitivity']+ confusion_matrix$byClass['Specificity'])/2
+cat("The Balanced accuracy is",as.numeric(balanced_accuracy))
+```
+### Part 2.1-C-ii
+```{r}
+balanced_error=as.numeric(1- balanced_accuracy)
+cat("The Balanced error rate is:",balanced_error)
+```
+### Part 2.1-C-iii
+```{r}
+cat("Sensitivity",confusion_matrix$byClass['Sensitivity'])
+cat("\nSpecificity",confusion_matrix$byClass['Specificity'])
+```
+### Part 2.1-C-iv
+#### The ROC curve is an graphical representation of trade-off between TPR and FPR of a classifier. In the curve the TPR is on y-axis and FPR is on x-axis. 
+```{r}
+
+library(pROC)
+library(ROCR)
+ypred<-predict(model,newdata = test,type="prob")
+
+s<-test$income
+s[s=="<=50K"]<-0
+s[s==">50K"]<-1
+s<-as.numeric(s)
+pred = prediction(ypred[,2], s)
+perf <- performance(pred,"tpr","fpr")
+
+roc = performance(pred,"tpr","fpr")
+plot(roc)
+abline(a = 0, b = 1)
+
+auc = performance(pred, measure = "auc")
+print(auc@y.values)
+```
+### Part 2.1-D
+```{r}
+library(rpart)
+printcp(model) 
+cat('Optimal CP value:', model$cptable[which.min(model$cptable[,'xerror']),'CP'])
+
+```
+ The pruning is a technique which is used to reduce the size of the decision tree, this can be done by eleminating weight connections in network to speed up and reduce model storage size. This can be used reduce the model complexity and also reduces the overfitting. The pruning is done with the help of the complexity parameter(cp).The cp is used to choose the optimal tree size and can control the size of the decision tree. The cost of adding new node to a decision tree from current nodeis the value of cp then the tree building does not continue.
+
+The further pruning does not benifit because the default cp value is 0.01, the relative error is 0.63852,  with reduce in cp value the relative error may decrese with the increse in complexity of the decision tree, in here the chance of overfitting is more. By seeing the cp table the increase in the cp value has the increase in the relative error, pruning is not possible with higher cp values.
+
+### Part 2.1-E
+```{r}
+set.seed(1122)
+```
+### Part 2.1-E-i
+```{r}
+cat("In training dataset,The no of observations of class '<=50K' is:",sum(train$income =="<=50K"))
+cat("\nIn training dataset, The no of observations  class '>50K' is:",sum(train$income ==">50K"))
+```
+### Part 2.1-E-ii
+```{r}
+t_subset<- train[sample(which(train$income=="<=50K"),sum(train$income==">50K")),]
+new_train_dataset<-rbind(t_subset,train[train$income==">50K",])
+new_train_dataset
+sum(new_train_dataset$income =="<=50K")
+sum(new_train_dataset$income ==">50K")
+```
+### Part 2.1-E-iii
+```{r}
+new_model<-rpart(income ~ ., data = new_train_dataset)
+n_pred=predict(new_model,test,type = "class")
+confusion_matrix <- confusionMatrix(n_pred, as.factor(test$income))
+confusion_matrix
+```
+### Part 2.1-E-iii-i
+```{r}
+balanced_accuracy<- (confusion_matrix$byClass['Sensitivity']+ confusion_matrix$byClass['Specificity'])/2
+cat("The Balanced accuracy is",as.numeric(balanced_accuracy))
+```
+### Part 2.1-E-iii-ii
+```{r}
+balanced_error=as.numeric(1- balanced_accuracy)
+cat("The Balanced error rate is:",balanced_error)
+```
+### Part 2.1-E-iii-iii
+```{r}
+cat("Sensitivity",confusion_matrix$byClass['Sensitivity'])
+cat("\nSpecificity",confusion_matrix$byClass['Specificity'])
+```
+### Part 2.1-E-iii-iv
+```{r}
+
+ypred<-predict(model,newdata = test,type="prob")
+
+s<-test$income
+s[s=="<=50K"]<-0
+s[s==">50K"]<-1
+s<-as.numeric(s)
+pred = prediction(ypred[,2], s)
+perf <- performance(pred,"tpr","fpr")
+
+roc = performance(pred,"tpr","fpr")
+plot(roc)
+abline(a = 0, b = 1)
+
+auc = performance(pred, measure = "auc")
+cat("The AUC is",auc@y.values[[1]])
+```
+### Part 2.1-F
+The AUC found is'0.843' in (e) and the AUC for the (c) is also the '0.843' these both the AUCs in both models are same.
+And the Balanced accuracy for the (c) is '726' and the Balanced accuracy for the (e) is '0.805' it is grater than the accuracy of (c).
+Sensitivity 0.948 found in the (c) is grater than the sensitivity value found  in (e) Sensitivity 0.742.
+Specificity 0.504 found in the (c) is smaller than the specificity value found in (e) Specificity 0.867.
+
+positive predictors value of (c) is 0.854   is small than the positive predictor value of the (e) 0.945.
+
+The AUC value in (e) 0.843 is same as the value in the (c) 0.843.

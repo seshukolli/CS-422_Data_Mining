@@ -1,0 +1,118 @@
+---
+title: "CS 422 HW5"
+author: "Sesha Shai Datta Kolli"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+
+### Part 2.1-B - Frequent Itemsets and Rules of 1K transactions
+```{r, fig.width = 10, fig.width = 10}
+#install.packages("arules")
+library(arules)
+# 1k Transaction dataset
+transactions_1k<-read.transactions(file = "tr-1k-canonical.csv",sep=",")
+summary(transactions_1k)
+inspect(transactions_1k[1:5])
+itemFrequencyPlot(transactions_1k,support=0.01)
+
+frequent_1k <- apriori(transactions_1k, parameter = list(supp = 0.01, conf = 0.8,target="frequent itemsets"))
+#inspect(sort(frequent_1k,decreasing=TRUE, by="count"))
+frequent_1k_df<-DATAFRAME(frequent_1k)
+colnames(frequent_1k_df)<- c('ITEMS','Support')
+print(frequent_1k_df[order(frequent_1k_df$Support, decreasing = TRUE), 1:2])
+
+
+rls_1k <- apriori(transactions_1k, parameter = list(supp = 0.01, conf = 0.8,target="rules"))
+rls_1k_df<-DATAFRAME(rls_1k)
+colnames(rls_1k_df)<- c('Antecedent','Consequent','Support','Confidence')
+print(rls_1k_df[order(rls_1k_df$Support, decreasing = TRUE), 1:4])
+```
+
+
+
+### Part 2.1-B- Frequent Itemsets and Rules of 5K transactions
+```{r}
+
+# 5K Transactions dataset
+transactions_5k<-read.transactions(file = "tr-5k-canonical.csv",sep=",")
+
+frequent_5k <- apriori(transactions_5k, parameter = list(supp = 0.01, conf = 0.8,target="frequent itemsets"))
+#inspect(sort(frequent_5k,decreasing=TRUE, by="count"))
+frequent_5k_df<-DATAFRAME(frequent_5k)
+colnames(frequent_5k_df)<- c('ITEMS','Support')
+print(frequent_5k_df[order(frequent_5k_df$Support, decreasing = TRUE), 1:2])
+
+
+rls_5k <- apriori(transactions_5k, parameter = list(supp = 0.01, conf = 0.8,target="rules"))
+rls_5k_df<-DATAFRAME(rls_5k)
+colnames(rls_5k_df)<- c('Antecedent','Consequent','Support','Confidence')
+print(rls_5k_df[order(rls_5k_df$Support, decreasing = TRUE), 1:4])
+```
+
+### Part 2.1-B- Frequent Itemsets and Rules of 20K transactions
+```{r}
+# 20K Transactions dataset
+transactions_20k<-read.transactions(file = "tr-20k-canonical.csv",sep=",")
+
+frequent_20k <- apriori(transactions_20k, parameter = list(supp = 0.01, conf = 0.8,target="frequent itemsets"))
+#inspect(sort(frequent_20k,decreasing=TRUE, by="count"))
+frequent_20k_df<-DATAFRAME(frequent_20k)
+colnames(frequent_20k_df)<- c('ITEMS','Support')
+print(frequent_20k_df[order(frequent_20k_df$Support, decreasing = TRUE), 1:2])
+
+
+rls_20k <- apriori(transactions_20k, parameter = list(supp = 0.01, conf = 0.8,target="rules"))
+rls_20k_df<-DATAFRAME(rls_20k)
+colnames(rls_20k_df)<- c('Antecedent','Consequent','Support','Confidence')
+print(rls_20k_df[order(rls_20k_df$Support, decreasing = TRUE), 1:4])
+```
+
+### Part 2.1-B- Frequent Itemsets and Rules of 75K transactions
+```{r}
+# 75K Transactions dataset
+transactions_75k<-read.transactions(file = "tr-75k-canonical.csv",sep=",")
+
+frequent_75k <- apriori(transactions_75k, parameter = list(supp = 0.01, conf = 0.8,target="frequent itemsets"))
+#inspect(sort(frequent_75k,decreasing=TRUE, by="count"))
+frequent_75k_df<-DATAFRAME(frequent_75k)
+colnames(frequent_75k_df)<- c('ITEMS','Support')
+print(frequent_75k_df[order(frequent_75k_df$Support, decreasing = TRUE), 1:2])
+
+rls_75k <- apriori(transactions_75k, parameter = list(supp = 0.01, conf = 0.8,target="rules"))
+rls_75k_df<-DATAFRAME(rls_75k)
+colnames(rls_75k_df)<- c('Antecedent','Consequent','Support','Confidence')
+print(rls_75k_df[order(rls_75k_df$Support, decreasing = TRUE), 1:4])
+```
+Note: Please maximize the window to view the output.
+
+### Part 2.1-C
+
+
+When we compare rules in 1000, 5000, 20000, and 75000 datasets, there is no difference in terms of support because there is only a 0.01 variation in maximum support in each dataset. The maximum support achieved in each dataset is roughly 0.040. If support = 0.01 and confidence = 0.8, all datasets produce roughly 80 rules.
+
+The distribution of itemsets in the dataset changes as the number of transactions grows. Lift is steadily decreasing as well. The most common itemset in each dataset changes as the number of observations grows.
+
+
+### Part 2.1-D-i
+```{r}
+#Most Frequent item or itemset
+frequent_75k_df2<-DATAFRAME(frequent_75k)
+colnames(frequent_75k_df2)<- c('ITEMS','Support','Count')
+print(head(frequent_75k_df2[order(frequent_75k_df2$Count, decreasing = TRUE), 1:3],1))
+```
+### Part 2.1-D-ii
+```{r}
+
+#Least Frequent item or itemset
+frequent_75k_df2<-DATAFRAME(frequent_75k)
+colnames(frequent_75k_df2)<- c('ITEMS','Support','Count')
+print(head(frequent_75k_df2[order(frequent_75k_df2$Count, decreasing = FALSE), 1:3],1))
+```
+
+

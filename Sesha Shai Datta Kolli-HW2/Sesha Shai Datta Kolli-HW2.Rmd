@@ -1,0 +1,168 @@
+---
+title: "CS 422 HW2"
+author: "Sesha Shai Datta Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+<!-- More information in R Markdown can be found at:
+1. https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html  This is 
+   the place to start since it is a short tutorial.
+2. https://rmarkdown.rstudio.com/index.html This contains a longer 
+   tutorial.  Take a look at the cheatsheet in 
+   https://rmarkdown.rstudio.com/lesson-15.html, it is a concise 
+   reference of R Markdown on two pages.
+<-->
+### 2
+### Part 2.1
+#### Install ISLR
+```{r}
+library("ISLR")
+data=ISLR::Auto
+print(data)
+```
+
+```{r}
+set.seed(1122)
+index <- sample(1:nrow(Auto), 0.95*dim(Auto)[1])
+train.df <-Auto[index,]
+test.df <- Auto[-index, ]
+```
+### Part 2.1-A
+```{r}
+train.df=subset(train.df,select=-c(name))
+test.df=subset(test.df,select=-c(name))
+model=lm(formula=mpg~.,data=train.df)
+```
+### Part 2.1-A-i
+
+We are not Using the vehicle name as predictor for mpg(response). The car names are not relevant to the prediction problem
+and they are not reasonable to take, to predict our response(mpg) because its a qualitative data
+
+### Part 2.1-A-ii
+
+```{r}
+s=summary(model)
+print(s)
+
+n=length(m$residuals)
+rss=c(crossprod(m$residuals))
+mse=(rss/n)
+rmse=sqrt(mse)
+rse=sqrt((1/(n-7-1))*rss)
+
+cat('\nR-sq value is',round(m$r.squared,digits=2),'\nAdjusted R-sq value is',round(m$adj.r.squared,digits=2),'\nRSE is ',round(rse,digits=2),'\nRMSE is',round(rmse,digits=2))
+
+```
+
+We can infer from the summary that the greatest residual value is 12.99.
+R^2 and Adjusted R-sq:
+With an R2 value of 0.81, our model can account for 81% of the variation in the response variable around its mean. The value of 0.81 for R-squared and Adjusted R-squared is the same. R-square takes into account all independent variables that have an impact on the model's outcomes, whereas Adjusted R-squared only takes into account independent variables that have an impact on the dependent variable.
+RMSE:
+The residuals around the line of best fit had a standard deviation of 3.37, as shown by the RMSE that we obtained. The better match is shown by lower values. However, the RMSE value of 3.37 is small given that our Response values (mpg) range from 9 to 46.
+RSE:
+A regression model's residual standard error  how well it fits the data. This model's RSE, which was trained using every predictor, is 3.41. This shows that the model has an average error of 3.41 in predicting the target variable.
+
+### Part 2.1-A-iii
+```{r}
+plot(fitted.values(model),m$residuals,xlab = "Predicted Values",ylab = "Residual Error", main = "Residual Plot")
+abline(0,0)
+```
+### Part 2.1-A-iv
+```{r}
+hist(m$residuals,xlab =" Residuals",main = "Histogram of Residual")
+```
+Gaussian Distribution: 
+Yes, the histogram follows the Gaussian distribution. It is also known as normal distribution,the data is symmetric to the mean.the appearance of the data is near to the mean than the data far from he mean.Not all symmetrical distributions are normal, but all normal distributions are symmetrical. Here in above image we can see that, we had high frequency at '0'(mean) than far the mean.
+ 
+### Part 2.1-B-i
+```{r}
+
+model2=lm(formula=mpg~weight+year+origin,data=train.df)
+
+```
+To narrow down the features, i had picked 3 features having less P-value among all the features in the data set, and now i created a different model using subset function.
+
+### Part 2.1-B-ii
+```{r}
+m=summary(model2)
+print(m)
+
+n=length(m$residuals)
+rss=c(crossprod(m$residuals))
+mse=(rss/n)
+rmse=sqrt(mse)
+rse=sqrt((1/(n-3-1))*rss)
+cat('\nR-sq value is',round(m$r.squared,digits=2),'\nAdjusted R-sq value is',round(m$adj.r.squared,digits=2),'\nRSE is ',round(rse,digits=2),'\nRMSE is',round(rmse,digits=2))
+```
+We can infer from the summary that the greatest residual value is 12.99.
+R^2 and Adj R sq:
+The model here is created with only three features,With an R2 value of 0.81, our model can account for 81% of the variation in the response variable around its mean. The value of 0.81 for R-squared and Adjusted R-squared is the same. R-square takes into account all independent variables that have an impact on the model's outcomes, whereas Adjusted R-squared only takes into account independent variables that have an impact on the dependent variable.This got the same values when we created model with all the features
+RMSE:
+This also the same with the model we created with the all features.The residuals around the line of best fit had a standard deviation of 3.37, as shown by the RMSE that we obtained. The better match is shown by lower values. However, the RMSE value of 3.37 is small given that our Response values (mpg) range from 9 to 46.
+RSE:
+This is different value compared with previous model in 'a' we got 3.41 in model, here it is 3.39A regression model's residual standard error  how well it fits the data. This model's RSE, which was trained using every predictor, is 3.39. This shows that the model has an average error of 3.39 in predicting the target variable.
+
+### Part 2.1-b-iii
+```{r}
+plot(fitted.values(model),m$residuals,xlab = "Predicted Values",ylab = "Residual Error", main = "Residual Plot")
+abline(0,0)
+```
+### Part 2.1-B-iv
+```{r}
+hist(m$residuals,xlab = "Residuals",main = "Histogram of Residual")
+
+```
+
+Gaussian Distribution: It is also known as normal distribution,the data is symmetric to the mean.the appearance of the data is near to the mean than the data far from he mean.Not all symmetrical distributions are normal, but all normal distributions are symmetrical.
+
+The data in the histogram above is centered around 0, so it follows the normal distribution; however, the residuals on the negative scale are more left-skewed. Since the model may have predicted a value that is lower than the actual value, it is not optimally fitted. The model is more biased toward the histogram's negative scale, we can also say. Due to the histogram's left-skewed distribution, the majority of the model's predicted values fall above the fitted line, or higher than the actual values. So, based on this, we can conclude that our model may, on average, overestimate the independent value, or mpg.
+
+### Part 2.1-b-v
+Comparing models from (a) and (b)
+
+The both models had performed well on the training data. The R-square and the Adjusted R-square for both the models are same(0.81).
+The relative stranded error for the both models are different for the first model in (a) is 3.41 and for the model in (b) is 3.39, here the model in (b) is better because its having the low value than model in (a), the closer it gets to '0' the good the model.
+The Root Mean Square Error(RMSE) is a measure that shows how the model regression line is fitted to data points.
+The model(a) is trained on the all the features and model(b) is just trained on 3 features,But the model(b) had better
+performance among the both
+
+### Part 2.1-c
+
+```{r}
+
+ypred=as.data.frame(predict.lm(model,test.df[-c(1)],interval = c("confidence"),level = 0.95))
+round(ypred,digits=2)
+```
+### Part 2.1-d
+```{r}
+res=data.frame(Prediction=c(ypred$fit),Response=c(test.df$mpg),Lower=c(ypred$lwr),Upper=c(ypred$upr))
+res$Match=apply(res,1 ,function(res){ifelse(res["Response"]>=res["Lower"] & res["Response"]<=res["Upper"],1,0)})
+print(round(res,digits=2))
+cat('\n ',sum(res$Match==1))
+```
+### Part 2.1-e
+```{r}
+ypred2=as.data.frame(predict.lm(model,test.df[-c(1)],interval = c("prediction"),level = 0.95))
+res=data.frame(Prediction=c(ypred2$fit),Response=c(test.df$mpg),Lower=c(ypred2$lwr),Upper=c(ypred2$upr))
+res$Match=apply(res,1 ,function(res){ifelse(res["Response"]>=res["Lower"] & res["Response"]<=res["Upper"],1,0)})
+print(round(res,digits = 2))
+cat('\n ',sum(res$Match==1))
+```
+### Part 2.1-f
+
+Prediction interval is a range,where the newly predicted values fall in that range. The prediction interval is made based on observation of previous data, and the prediction interval will also captures the uncertainty of the  single value. The prediction interval is more wider than the confidence interval.
+
+Confidence interval: In here we will calculate the upper and the lower bound values of the interval, and our predicted values will fall under the interval.we can run our program many times and the values fall under the same interval based on confidence percentage. The percentage we took here is 95% that is confidence level, that the values we predicted weill fall uder the lower and upper bounds of the interval.
+
+
+### Part 2.1-f-i
+The Prediction interval has the interval range, where the all values fall in the interval in (e), in the confidence interval has only 8 matches which fall in the boundary of the confidence interval.where the range of prediction intervcal is much wider than the confidence interval.
+
+### Part 2.1-f-ii
+
+By looking at 'd' and 'e'. we can tell that 'd' confidence interval has the small interval range and the 'e' has the large range of interval, which tells the fitting range. in 'd' we got only 8 values fall in that interval and in 'e', we got all the values'20' fall in the interval.This is because prediction interval must account for uncertainty of estimation population mean as well as random variation of individual 

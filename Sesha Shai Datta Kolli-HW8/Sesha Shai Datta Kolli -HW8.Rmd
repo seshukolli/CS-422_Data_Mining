@@ -1,0 +1,209 @@
+---
+title: "CS 422 HW8"
+author: "Sesha Shai Datta Kolli, Illinois Institute of Technology"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    df_print: paged
+---
+```{r}
+setwd("D:/Masters/DM/HW7/")
+library(Hmisc)
+```
+### Part 2.1-A-i
+```{r}
+df <- read.table(file='file19.txt', header=TRUE)
+#dim(df)
+df
+```
+We can remove the Name attribute from the data. The name of the each mammal is unique,that offers no assistance for performing clustering 
+
+### Part 2.1-A-ii
+```{r}
+summary(df)
+
+cat("\nThe Standard-deviation of I is :",sd(df$I),"\n")
+cat("The Standard-deviation of i is :",sd(df$i),"\n")
+
+cat("\nThe Standard-deviation of C is :",sd(df$C),"\n")
+cat("The Standard-deviation of c is :",sd(df$c),"\n")
+
+cat("\nThe Standard-deviation of p is :",sd(df$p),"\n")
+cat("The Standard-deviation of P is :",sd(df$P),"\n")
+
+cat("\nThe Standard-deviation of M is :",sd(df$M),"\n")
+cat("The Standard-deviation of m is :",sd(df$m),"\n")
+```
+There is little variability in the properties of the data set, as can be seen from the summary and histogram distribution. They are comparable in terms of median, mean, standard deviation, and data range.
+It is not necessary to standardize data.
+
+### Part 2.1-A-iii
+```{r}
+df1<- subset(df, select = -c(Name))
+data<-as.data.frame(apply(df1,2,function(x)gsub('\\s+', '',x)))
+head(data)
+write.table(data, file = "data.txt", sep = " ",
+            row.names = TRUE, col.names = NA)
+```
+### Part 2.1-B-i
+```{r}
+df1<- subset(df, select = -c(Name))
+pkgs <- c("factoextra",  "NbClust")
+install.packages(pkgs)
+library(factoextra)
+library(NbClust)
+library("fpc")
+fviz_nbclust(df1, kmeans, method = "wss")+
+    geom_vline(xintercept = 8, linetype = 2)+
+  labs(subtitle = "Elbow method")
+```
+By seeing the graph the number of clusters we need is 8 clusters.
+
+### Part 2-2.1-b-ii
+```{r}
+k2 <- kmeans(df1, centers =8)
+fviz_cluster(k2, data = df1)
+```
+### Part 2-2.1-b-iii
+```{r}
+
+cat("The Number of observation in each cluster\n")
+for (x in 1:8) {
+  cat("The size of the ",x,"cluster is",k2$size[x],"\n")
+}
+```
+### Part 2-2.1-b-iv
+```{r}
+cat("The Total SSE of the cluster is:",k2$tot.withinss)
+```
+### Part 2-2.1-b-v
+```{r}
+for (x in 1:8) {
+  cat("The size of the ",x,"cluster is",k2$withinss[x],"\n")
+}
+```
+### Part 2-2.1-b-vi
+```{r}
+analysis_data<-data.frame(name=character(0),cluster=numeric(0))
+for(i in 1:nrow(df)){
+  analysis_data[i,1]<-as.character(df[i,1])
+  analysis_data[i,2]<-k2$cluster[i]
+}
+print(analysis_data)
+print(as.data.frame(analysis_data$name[analysis_data$cluster==4]))
+print(as.data.frame(analysis_data$name[analysis_data$cluster==6]))
+```
+Here by seeing the teeth pattern of mammals which clustered above. They all are properly clustered .In above cluster 6 the deer, elk and moose all are same 	Mammalia family. and their teeth pattern are also same. so these are formed good clusters.
+
+### Part 2.2-A
+```{r}
+d1<-read.csv("./s1.csv")
+head(d1)
+summary(d1)
+cat("\nStandard deviation of x=",sd(d1$x),"\n")
+cat("Standard deviation of y=",sd(d1$y),"\n")
+```
+Both have similar median, mean, standard deviation and data range.The data set summary and histogram distribution show that there is little variance in data set columns x and y.
+There is no need of doing data standardization.
+
+### Part 2.2-B-i
+```{r}
+plot(d1)
+```
+### Part 2.2-B-ii
+Here in the graph we can see the 15 clusters above. We can see each cluster having dense points and the all clusters looks individually and the points within cluster are close to each other.
+
+### Part 2.2-C-i
+```{r}
+library(NbClust)
+fviz_nbclust(d1, kmeans, method = "wss") +
+    geom_vline(xintercept = 4, linetype = 2)+
+  labs(subtitle = "Elbow method")
+```
+### Part 2.2-C-ii
+```{r}
+fviz_nbclust(d1,FUNcluster=kmeans,method = "silhouette")
+```
+### Part 2.2-C-iii
+```{r}
+cat("The Number of clusters when we are using k-means is 10 on this data")
+```
+### Part 2.2-D-i
+```{r}
+kmeans_r <- kmeans(data1, centers = 15)
+fviz_cluster(kmeans_r, d1)
+```
+### Part 2.2-d-ii
+Here we can see that it didnt perform the clustering properly, some clusters are joined together into one cluster, this we cannot see proper clusters, many nearby clusters are joined.
+
+### Part 2.2-E-i
+By doing experiments, i get to know that MinPts=8, If i take other value then some times i am getting joined clusters, and i am getting many individual clusters.
+If we take 1 as MinPts then every point will have centroid. so we have to take atleast MinPts as 3. in our data we didnt see many outlairs so no need to keep the MinPts as high
+so i choose MinPts as 8.
+
+### Part 2.2-E-ii
+```{r}
+library("dbscan")
+dbscan::kNNdistplot(d1, k =  8)
+abline(h = 22650, lty = 2)
+```
+we can see the knee  point near by 20000, here we can take eps value to 22515
+```{r}
+
+k <- c(8)
+eps <- seq(15500,30000,100)
+grid <- c(expand.grid(k = k, eps = eps))
+
+
+results <- mapply(grid$k, grid$eps, FUN = function(k, eps) {
+  cluster <- max(fpc::dbscan(d1, eps = eps, MinPts = k)$cluster)
+  cat(c( "At minPts =", k, ", eps =",eps,", there are" ,cluster,"clusters.","\n"))
+  
+  
+})
+cat("Setting k found in Part 2.2 E-i. We got optimal eps value will be 22600")
+```
+```{r}
+
+library("factoextra")
+library("fpc")
+res.fpc <- fpc::dbscan(data1, eps = 22650, MinPts = 8) 
+fviz_cluster(res.fpc, data1, geom = "point")
+```
+```{r}
+
+cat("\n At minPts =",8," eps =",22650," there are ",max(res.fpc$cluster)," clusters")
+```
+We identify the eps value that clusters the data set into the maximum number of predicted clusters as determined in (c) (iii).Using the scree plot from kNNdistplot()
+```{r}
+library("dbscan")
+dbscan::kNNdistplot(d1, k =  10)
+abline(h = 23600, lty = 2)
+```
+```{r}
+k <- c(8)
+eps <- seq(22000,38000,500) 
+grid <- c(expand.grid(k = k, eps = eps))
+
+
+results <- mapply(grid$k, grid$eps, FUN = function(k, eps) {
+  cluster <- max(fpc::dbscan(d1, eps = eps, MinPts = k)$cluster)
+  cat(c( "At minPts =", k, ", eps =",eps,", there are" ,cluster,"clusters.","\n"))
+  
+  
+})
+```
+```{r}
+library("factoextra")
+library("fpc")
+res.fpc <- fpc::dbscan(d1, eps = 32500, MinPts = 10) 
+cat(max(res.fpc$cluster))
+fviz_cluster(res.fpc, d1, geom = "point")
+```
+```{r}
+cat("\n At minPts =",10," eps =",35000," there are ",max(res.fpc$cluster)," clusters")
+```
+
